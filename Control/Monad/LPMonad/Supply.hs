@@ -8,7 +8,7 @@ import Control.Monad.State.Strict
 import Control.Monad.RWS.Class
 import Control.Monad.Cont.Class
 import Control.Monad.Error.Class
-
+import Control.Applicative
 import Control.Monad.LPMonad.Supply.Class
 
 -- | A type suitable for use as a linear program variable.
@@ -21,24 +21,24 @@ runVSupply :: VSupply a -> a
 runVSupply = runIdentity . runVSupplyT
 
 -- | A monad transformer capable of supplying unique variables.
-newtype VSupplyT m a = VSupplyT (StateT Var m a) deriving (Functor, Monad, MonadPlus, MonadTrans, MonadReader r, MonadWriter w, MonadCont,
-	MonadIO, MonadFix, MonadError e)
+newtype VSupplyT m a = VSupplyT (StateT Var m a) deriving (Functor, Applicative, Monad, Alternative, MonadPlus, MonadTrans, MonadReader r, MonadWriter w, MonadCont,
+        MonadIO, MonadFix, MonadError e)
 
 runVSupplyT :: Monad m => VSupplyT m a -> m a
 runVSupplyT (VSupplyT m) = evalStateT m (Var 0)
 
 instance Show Var where
-	show (Var x) = "x_" ++ show x
+        show (Var x) = "x_" ++ show x
 
 instance Read Var where
-	readsPrec _ ('x':'_':xs) = [(Var x, s') | (x, s') <- reads xs]
-	readsPrec _ _ = []
+        readsPrec _ ('x':'_':xs) = [(Var x, s') | (x, s') <- reads xs]
+        readsPrec _ _ = []
 
 instance MonadState s m => MonadState s (VSupplyT m) where
-	get = lift get
-	put = lift . put
+        get = lift get
+        put = lift . put
 
 instance Monad m => MonadSupply Var (VSupplyT m) where
-	{-# SPECIALIZE instance MonadSupply Var VSupply #-}
-	supplyNew = VSupplyT $ StateT $ \ v -> return (v, succ v)
-	supplyN n = VSupplyT $ StateT $ \ (Var x) -> return (map Var [x..x+n-1], Var (x + n))
+        {-# SPECIALIZE instance MonadSupply Var VSupply #-}
+        supplyNew = VSupplyT $ StateT $ \ v -> return (v, succ v)
+        supplyN n = VSupplyT $ StateT $ \ (Var x) -> return (map Var [x..x+n-1], Var (x + n))
