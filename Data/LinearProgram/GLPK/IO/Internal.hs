@@ -2,6 +2,8 @@
 
 module Data.LinearProgram.GLPK.IO.Internal (readGLPLP, writeGLPLP) where
 
+import Prelude hiding (subtract, fromIntegral)
+import qualified Prelude
 import Control.Monad
 import Control.Monad.Trans (liftIO, lift)
 
@@ -9,9 +11,11 @@ import Data.Map hiding (map, filter)
 import Debug.Trace
 import Foreign.Storable
 
+import Numeric.Additive.Group ()
 import Data.LinearProgram.Common
 import Data.LinearProgram.GLPK.Common
 import Control.Monad.LPMonad.Internal
+import qualified Data.Map as M
 
 foreign import ccall unsafe "c_glp_write_lp" glpWriteLP :: Ptr GlpProb -> CString -> IO ()
 foreign import ccall unsafe "c_glp_read_lp" glpReadLP :: Ptr GlpProb -> CString -> IO ()
@@ -42,8 +46,8 @@ getDir :: GLPK Direction
 getDir = liftM (toEnum . subtract 1 . fromIntegral) $ GLP glpGetObjDir
 
 getRowName, getColName :: Int -> GLPK (Maybe String)
-getRowName i = GLP $ peekCAString' <=< flip glpGetRowName (fromIntegral i)
-getColName i = GLP $ peekCAString' <=< flip glpGetColName (fromIntegral i)
+getRowName i = GLP $ peekCAString' <=< flip glpGetRowName (Prelude.fromIntegral i)
+getColName i = GLP $ peekCAString' <=< flip glpGetColName (Prelude.fromIntegral i)
 
 peekCAString' :: CString -> IO (Maybe String)
 peekCAString' str
@@ -62,16 +66,16 @@ colKind :: Int -> GLPK VarKind
 colKind = liftM (toEnum . subtract 1) . getCInt glpGetColKind
 
 getCInt :: (Ptr GlpProb -> CInt -> IO CInt) -> Int -> GLPK Int
-getCInt f i = GLP $ \ lp -> liftM fromIntegral $ f lp (fromIntegral i)
+getCInt f i = GLP $ \ lp -> liftM fromIntegral $ f lp (Prelude.fromIntegral i)
 
 getCDouble :: (Ptr GlpProb -> CInt -> IO CDouble) -> Int -> GLPK Double
-getCDouble f i = GLP $ \ lp -> liftM realToFrac $ f lp (fromIntegral i)
+getCDouble f i = GLP $ \ lp -> liftM realToFrac $ f lp (Prelude.fromIntegral i)
 
 setRowName :: Int -> String -> GLPK ()
-setRowName i nam = GLP $ withCString nam . flip glpSetRowName (fromIntegral i)
+setRowName i nam = GLP $ withCString nam . flip glpSetRowName (Prelude.fromIntegral i)
 
 setColName :: Int -> String -> GLPK ()
-setColName i nam = GLP $ withCString nam . flip glpSetColName (fromIntegral i)
+setColName i nam = GLP $ withCString nam . flip glpSetColName (Prelude.fromIntegral i)
 
 loadBounds :: (Int -> GLPK Double) -> (Int -> GLPK Double) ->
 	(Int -> GLPK Int) -> Int -> GLPK (Bounds Double)
@@ -93,7 +97,7 @@ getRows = do	n <- getNumRows
 		ixs <- liftIO $ mallocArray (m+1)
 		coefs <- liftIO $ mallocArray (m+1)
 		sequence [do
-			k <- liftM fromIntegral $ GLP $ \ lp -> glpGetMatRow lp (fromIntegral i) ixs coefs
+			k <- liftM fromIntegral $ GLP $ \ lp -> glpGetMatRow lp (Prelude.fromIntegral i) ixs coefs
 			ixsL <- liftIO $ mapM (peekElemOff ixs) [1..k]
 			coefsL <- liftIO $ mapM (peekElemOff ixs) [1..k]
 			return (i, zip (map fromIntegral ixsL) (map realToFrac coefsL))
@@ -125,6 +129,8 @@ readGLPLP file = execLPT $ do
 		c <- getObjCoef i
 		return (name, c) | (i, name) <- assocs names]
 	setObjective (fromList (filter ((/= 0) . snd) obj))
+
+linCombination xs = M.fromListWith (+) [(v, r) | (r, v) <- xs]
 
 writeGLPLP :: (Show v, Ord v, Real c) => FilePath -> LP v c -> GLPK ()
 writeGLPLP file lp = do

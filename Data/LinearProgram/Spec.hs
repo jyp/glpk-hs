@@ -2,6 +2,8 @@
 module Data.LinearProgram.Spec (Constraint(..), VarTypes, ObjectiveFunc, VarBounds, LP(..),
         mapVars, mapVals, allVars) where
 
+import Prelude hiding ((+),negate)
+import qualified Prelude
 import Control.DeepSeq
 import Control.Monad
 
@@ -10,8 +12,10 @@ import Data.Map hiding (map, foldl)
 
 import Text.ParserCombinators.ReadP
 
-import Data.Algebra
+import Numeric.Algebra hiding (char)
+import Numeric.Additive.Group ()
 import Data.LinearProgram.Types
+import Data.LinearProgram.LinExpr
 
 -- | Representation of a linear constraint on the variables, possibly labeled.
 -- The function may be bounded both above and below.
@@ -51,7 +55,7 @@ showFunc func = case assocs func of
         where   showTerm (v, c) = case compare c 0 of
                         EQ      -> ""
                         GT      -> " + " ++ show c ++ " " ++ show v
-                        LT      -> " - " ++ show (negate c) ++ " " ++ show v
+                        LT      -> " - " ++ show (Prelude.negate c) ++ " " ++ show v
                 
 replaceSpace :: Char -> Char
 replaceSpace c
@@ -83,7 +87,7 @@ readCoef readC = between skipSpaces skipSpaces $
                 readC') <++
         (do     char '-'
                 skipSpaces
-                negate <$> readC') <++ readC'
+                Prelude.negate <$> readC') <++ readC'
         where   readC' = readC <++ return 1
 
 optMaybe :: ReadP a -> ReadP (Maybe a)
@@ -117,7 +121,6 @@ readBds cst expr = do
                         char '=' >> return EQ,
                         char '>' >> optional (char '=') >> return GT]
 
-{-# SPECIALIZE mapVars :: Ord v' => (v -> v') -> LP v Double -> LP v' Double #-}
 -- | Applies the specified function to the variables in the linear program.
 -- If multiple variables in the original program are mapped to the same variable in the new program,
 -- in general, we set those variables to all be equal, as follows.
@@ -133,8 +136,8 @@ readBds cst expr = do
 -- * In variable kinds, the most restrictive kind will be retained.
 mapVars :: (Ord v', Ord c, Group c) => (v -> v') -> LP v c -> LP v' c
 mapVars f LP{..} =  
-        LP{objective = mapKeysWith (^+^) f objective, 
-                constraints = [Constr lab (mapKeysWith (^+^) f func) bd | Constr lab func bd <- constraints],
+        LP{objective = mapKeysWith (+) f objective, 
+                constraints = [Constr lab (mapKeysWith (+) f func) bd | Constr lab func bd <- constraints],
                 varBounds = mapKeysWith mappend f varBounds,
                 varTypes = mapKeysWith mappend f varTypes, ..}
 

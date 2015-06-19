@@ -1,16 +1,9 @@
-with (import <nixpkgs> {}).pkgs;
-let pkg = haskellngPackages.callPackage
-            ({ mkDerivation, array, base, containers, deepseq, glpk, mtl
-             , stdenv
-             }:
-             mkDerivation {
-               pname = "glpk-hs";
-               version = "0.3.4";
-               src = ./.;
-               buildDepends = [ array base containers deepseq mtl ];
-               extraLibraries = [ glpk ];
-               description = "Comprehensive GLPK linear programming bindings";
-               license = stdenv.lib.licenses.bsd3;
-             }) {};
-in
-  pkg.env
+    let pkgs = (import <nixpkgs> {});
+        haskellPackages = pkgs.recurseIntoAttrs(pkgs.haskellPackages.override {
+            overrides = self: super:
+            let callPackage = self.callPackage; in {
+                  algebra = callPackage (import ../algebra/default.nix) {};
+                  thisPackage = callPackage (import ./default.nix) {};
+            };
+           });
+    in haskellPackages.thisPackage.env

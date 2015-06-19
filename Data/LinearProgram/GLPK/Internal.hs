@@ -15,7 +15,7 @@ import Foreign.Marshal.Array
 import Data.Bits
 import Data.Map hiding (map)
 -- import Data.Bounds
-import Data.LinearProgram.Common
+import Data.LinearProgram.Common hiding (fromIntegral)
 import Data.LinearProgram.GLPK.Types
 
 -- foreign import ccall "c_glp_set_obj_name" glpSetObjName :: Ptr GlpProb -> CString -> IO ()
