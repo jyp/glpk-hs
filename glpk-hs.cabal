@@ -1,9 +1,9 @@
 Name:           glpk-hs
-Version:        0.3.4
+Version:        0.3.5
 Author:         Louis Wasserman
 License:        BSD3
 License-file:   LICENSE
-Maintainer:     Louis Wasserman <wasserman.louis@gmail.com>
+Maintainer:     Jean-Philippe Bernardy <jeanphilippe.bernardy@gmail.com>
 Stability:      experimental
 Synopsis:       Comprehensive GLPK linear programming bindings
 Description:
@@ -18,7 +18,6 @@ Description:
 
 Category:      Math
 cabal-version: >= 1.4
-cabal-version:  >= 1.2
 build-type:     Simple
 
 extra-source-files: examples/example1.hs
