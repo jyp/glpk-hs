@@ -1,0 +1,9 @@
+flags: {}
+extra-package-dbs: []
+packages:
+- '.'
+resolver: lts-3.13
+nix:
+    enable: false
+    packages: [glpk]
+
