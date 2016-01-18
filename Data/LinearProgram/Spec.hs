@@ -1,17 +1,18 @@
 {-# LANGUAGE TupleSections, RecordWildCards, DeriveFunctor #-}
 module Data.LinearProgram.Spec (Constraint(..), VarTypes, ObjectiveFunc, VarBounds, LP(..),
-        mapVars, mapVals, allVars) where
+        mapVars, mapVals, allVars, linCombination) where
 
+import Prelude hiding (negate, (+))
 import Control.DeepSeq
 import Control.Monad
-
 import Data.Char (isSpace)
 import Data.Map hiding (map, foldl)
 
 import Text.ParserCombinators.ReadP
 
-import Data.Algebra
+import Algebra.Classes
 import Data.LinearProgram.Types
+import qualified Data.Map as M
 
 -- | Representation of a linear constraint on the variables, possibly labeled.
 -- The function may be bounded both above and below.
@@ -30,6 +31,9 @@ type VarBounds v c = Map v (Bounds c)
 data LP v c = LP {direction :: Direction, objective :: ObjectiveFunc v c, constraints :: [Constraint v c],
                   varBounds :: VarBounds v c, varTypes :: VarTypes v} deriving (Read, Show, Functor)
 
+linCombination :: (Ord v, Additive r) => [(r, v)] -> LinFunc v r
+linCombination xs = M.fromListWith (+) [(v, r) | (r, v) <- xs]
+
 allVars :: Ord v => LP v c -> Map v ()
 allVars LP{..} = foldl union ((() <$ objective) `union` (() <$ varBounds) `union` (() <$ varTypes))
         [() <$ f | Constr _ f _ <- constraints]
@@ -42,27 +46,27 @@ showBds expr bds = case bds of
         UBound x -> expr ++ " <= " ++ show x
         Bound l u -> show l ++ " <= " ++ expr ++ " <= " ++ show u
 
-showFunc :: (Show v, Num c, Ord c, Show c) => LinFunc v c -> String
+showFunc :: (Show v, Ord c, Show c, Num c, Group c) => LinFunc v c -> String
 showFunc func = case assocs func of
         []      -> "0"
         ((v,c):vcs) ->
-                show c ++ " " ++ map replaceSpace (show v) ++ 
+                show c ++ " " ++ map replaceSpace (show v) ++
                         concatMap showTerm vcs
         where   showTerm (v, c) = case compare c 0 of
                         EQ      -> ""
                         GT      -> " + " ++ show c ++ " " ++ show v
                         LT      -> " - " ++ show (negate c) ++ " " ++ show v
-                
+
 replaceSpace :: Char -> Char
 replaceSpace c
         | isSpace c     = '_'
         | otherwise     = c
 
-instance (Show v, Num c, Ord c, Show c) => Show (Constraint v c) where
+instance (Show v, Ord c, Show c, Num c, Group c) => Show (Constraint v c) where
         show (Constr lab func bds) = maybe "" (++ ": ") lab ++
                 showBds (showFunc func) bds
 
-instance (Read v, Ord v, Read c, Ord c, Num c) => Read (Constraint v c) where
+instance (Read v, Ord v, Read c, Ord c, Num c, Group c) => Read (Constraint v c) where
         readsPrec _= readP_to_S $ liftM toConstr (lab <++ nolab) where
                 toConstr (l, f, bds) = Constr l (fromList f) bds
                 lab = do        skipSpaces
@@ -76,8 +80,8 @@ instance (Read v, Ord v, Read c, Ord c, Num c) => Read (Constraint v c) where
                 readConst = readS_to_P reads
                 readVar = readS_to_P reads
 
-readCoef :: Num c => ReadP c -> ReadP c
-readCoef readC = between skipSpaces skipSpaces $ 
+readCoef :: (Num c, Group c) => ReadP c -> ReadP c
+readCoef readC = between skipSpaces skipSpaces $
         (do     char '+'
                 skipSpaces
                 readC') <++
@@ -121,7 +125,7 @@ readBds cst expr = do
 -- | Applies the specified function to the variables in the linear program.
 -- If multiple variables in the original program are mapped to the same variable in the new program,
 -- in general, we set those variables to all be equal, as follows.
--- 
+--
 -- * In linear functions, including the objective function and the constraints,
 --      coefficients will be added together.  For instance, if @v1,v2@ are mapped to the same
 --      variable @v'@, then a linear function of the form @c1 *& v1 ^+^ c2 *& v2@ will be mapped to
@@ -129,12 +133,12 @@ readBds cst expr = do
 --
 -- * In variable bounds, bounds will be combined.  An error will be thrown if the bounds
 --      are mutually contradictory.
--- 
+--
 -- * In variable kinds, the most restrictive kind will be retained.
 mapVars :: (Ord v', Ord c, Group c) => (v -> v') -> LP v c -> LP v' c
-mapVars f LP{..} =  
-        LP{objective = mapKeysWith (^+^) f objective, 
-                constraints = [Constr lab (mapKeysWith (^+^) f func) bd | Constr lab func bd <- constraints],
+mapVars f LP{..} =
+        LP{objective = mapKeysWith (+) f objective,
+                constraints = [Constr lab (mapKeysWith (+) f func) bd | Constr lab func bd <- constraints],
                 varBounds = mapKeysWith mappend f varBounds,
                 varTypes = mapKeysWith mappend f varTypes, ..}
 

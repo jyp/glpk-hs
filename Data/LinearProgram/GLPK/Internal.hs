@@ -7,7 +7,7 @@ module Data.LinearProgram.GLPK.Internal (writeProblem, solveSimplex, mipSolve,
 	setObjCoef, setObjectiveDirection, setRowBounds, setRowName, solveSimplex) where-}
 
 import Control.Monad
-
+import Prelude hiding ((+),(*))
 import Foreign.Ptr
 import Foreign.C
 import Foreign.Marshal.Array
@@ -36,7 +36,7 @@ foreign import ccall unsafe "c_glp_get_obj_val" glpGetObjVal :: Ptr GlpProb -> I
 foreign import ccall unsafe "c_glp_get_row_prim" glpGetRowPrim :: Ptr GlpProb -> CInt -> IO CDouble
 foreign import ccall unsafe "c_glp_get_col_prim" glpGetColPrim :: Ptr GlpProb -> CInt -> IO CDouble
 foreign import ccall unsafe "c_glp_set_col_kind" glpSetColKind :: Ptr GlpProb -> CInt -> CInt -> IO ()
-foreign import ccall unsafe "c_glp_mip_solve" glpMipSolve :: 
+foreign import ccall unsafe "c_glp_mip_solve" glpMipSolve ::
 	Ptr GlpProb -> CInt -> CInt -> CInt -> CInt -> CInt -> CInt -> CInt -> CDouble -> CInt -> IO CInt
 foreign import ccall unsafe "c_glp_mip_obj_val" glpMIPObjVal :: Ptr GlpProb -> IO CDouble
 foreign import ccall unsafe "c_glp_mip_row_val" glpMIPRowVal :: Ptr GlpProb -> CInt -> IO CDouble
@@ -78,7 +78,7 @@ setObjCoef i v = GLP $ \ lp -> glpSetObjCoef lp (fromIntegral i) (realToFrac v)
 
 {-# SPECIALIZE setMatRow :: Int -> [(Int, Double)] -> GLPK (), Int -> [(Int, Int)] -> GLPK () #-}
 setMatRow :: Real a => Int -> [(Int, a)] -> GLPK ()
-setMatRow i row = GLP $ \ lp -> 
+setMatRow i row = GLP $ \ lp ->
 	allocaArray (len+1) $ \ (ixs :: Ptr CInt) -> allocaArray (len+1) $ \ (coeffs :: Ptr CDouble) -> do
 		pokeArray ixs (0:map (fromIntegral . fst) row)
 		pokeArray coeffs (0:map (realToFrac . snd) row)

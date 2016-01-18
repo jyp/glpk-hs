@@ -1,9 +1,13 @@
 {-# LANGUAGE DeriveFunctor, DeriveGeneric #-}
-module Data.LinearProgram.Types (VarKind(..), Direction(..), Bounds(..)) where
+module Data.LinearProgram.Types (LinFunc, VarKind(..), Direction(..), Bounds(..)) where
 
 import Control.DeepSeq
 import Data.Monoid
 import GHC.Generics
+import Data.Map
+
+type LinFunc = Map
+
 
 data VarKind = ContVar | IntVar | BinVar deriving (Eq, Ord, Enum, Show, Read, Generic)
 

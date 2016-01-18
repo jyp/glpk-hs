@@ -44,6 +44,7 @@ module Control.Monad.LPMonad.Internal (
 --         newVariables'
         ) where
 
+import Prelude hiding ((-),(+))
 import Control.Monad.State.Strict
 import Control.Monad.Identity
 
@@ -51,7 +52,7 @@ import Data.Map
 
 import Data.LinearProgram.Common
 
--- | A simple monad for constructing linear programs.  This library is intended to be able to link to 
+-- | A simple monad for constructing linear programs.  This library is intended to be able to link to
 -- a variety of different linear programming implementations.
 type LPM v c = LPT v c Identity
 
@@ -92,13 +93,13 @@ setDirection dir = modify (\ lp -> lp{direction = dir})
 {-# SPECIALIZE geq :: (Ord v, Group c) => LinFunc v c -> LinFunc v c -> LPM v c (),
         (Ord v, Group c, Monad m) => LinFunc v c -> LinFunc v c -> LPT v c m () #-}
 -- | Specifies the relationship between two functions in the variables.  So, for example,
--- 
+--
 -- > equal (f ^+^ g) h
--- 
+--
 -- constrains the value of @h@ to be equal to the value of @f@ plus the value of @g@.
 equal, leq, geq :: (Ord v, Group c, MonadState (LP v c) m) => LinFunc v c -> LinFunc v c -> m ()
-equal f g = equalTo (f ^-^ g) zero
-leq f g = leqTo (f ^-^ g) zero
+equal f g = equalTo (f - g) zero
+leq f g = leqTo (f - g) zero
 geq = flip leq
 
 {-# SPECIALIZE equal' :: (Ord v, Group c) => String -> LinFunc v c -> LinFunc v c -> LPM v c (),
@@ -109,8 +110,8 @@ geq = flip leq
         (Ord v, Group c, Monad m) => String -> LinFunc v c -> LinFunc v c -> LPT v c m () #-}
 -- | Specifies the relationship between two functions in the variables, with a label on the constraint.
 equal', leq', geq' :: (Ord v, Group c, MonadState (LP v c) m) => String -> LinFunc v c -> LinFunc v c -> m ()
-equal' lab f g = equalTo' lab (f ^-^ g) zero
-leq' lab f g = leqTo' lab (f ^-^ g) zero
+equal' lab f g = equalTo' lab (f - g) zero
+leq' lab f g = leqTo' lab (f - g) zero
 geq' = flip . leq'
 
 {-# SPECIALIZE equalTo :: LinFunc v c -> c -> LPM v c (), Monad m => LinFunc v c -> c -> LPT v c m () #-}
@@ -150,7 +151,7 @@ geqTo' lab f v = constrain' lab f (LBound v)
 --                                 Nothing        -> return $ take k [toEnum 0..]
 --                                 Just ((start, _), _)
 --                                         -> return $ take k $ tail [start..]
---                                         
+--
 -- {-# SPECIALIZE newVariables' :: (Ord v, Enum v) => LPM v c [v],
 --         (Ord v, Enum v, Monad m) => LPT v c m [v] #-}
 -- -- | Returns an infinite list of unused variables.  If the program is currently empty,
@@ -218,13 +219,15 @@ setObjective obj = modify setObj where
 -- | Adds this function to the objective function.
 addObjective :: (Ord v, Group c, MonadState (LP v c) m) => LinFunc v c -> m ()
 addObjective obj = modify addObj where
-        addObj lp@LP{..} = lp {objective = obj ^+^ objective}
+        addObj lp@LP{..} = lp {objective = obj + objective}
 
-{-# SPECIALIZE addWeightedObjective :: (Ord v, Module r c) => r -> LinFunc v c -> LPM v c (),
-        (Ord v, Module r c, Monad m) => r -> LinFunc v c -> LPT v c m () #-}
+{-# SPECIALIZE addWeightedObjective ::
+        (Ord v, Ring c) => c -> LinFunc v c -> LPM v c (),
+        (Ord v, Ring c, Monad m) => c -> LinFunc v c -> LPT v c m () #-}
 -- | Adds this function to the objective function, with the specified weight.  Equivalent to
 -- @'addObjective' (wt '*^' obj)@.
-addWeightedObjective :: (Ord v, Module r c, MonadState (LP v c) m) => r -> LinFunc v c -> m ()
+addWeightedObjective :: (Ord v, Ring c, MonadState (LP v c) m) =>
+                        c -> LinFunc v c -> m ()
 addWeightedObjective wt obj = addObjective (wt *^ obj)
 
 {-# SPECIALIZE setVarBounds :: (Ord v, Ord c) => v -> Bounds c -> LPM v c (),

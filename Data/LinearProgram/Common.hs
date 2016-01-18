@@ -2,11 +2,11 @@
 -- linear programming libraries are made, this will be common to them all.
 module Data.LinearProgram.Common (
 	module Data.LinearProgram.Spec,
-	module Data.Algebra,
+	module Algebra.Classes,
 	module Data.LinearProgram.Types) where
 
 import Data.LinearProgram.Spec
-import Data.Algebra
+import Algebra.Classes
 import Data.LinearProgram.Types
 
 import Data.Map

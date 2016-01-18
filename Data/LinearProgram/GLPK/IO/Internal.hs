@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 module Data.LinearProgram.GLPK.IO.Internal (readGLPLP, writeGLPLP) where
-
+import Prelude hiding ((+))
 import Control.Monad
 import Control.Monad.Trans (liftIO, lift)
 
@@ -83,7 +83,7 @@ loadBounds lb ub tp i = do
 		3	-> liftM UBound (ub i)
 		4	-> liftM2 Bound (lb i) (ub i)
 		_	-> liftM Equ (lb i)
-		
+
 getObjCoef :: Int -> GLPK Double
 getObjCoef = getCDouble glpGetObjCoef
 
@@ -118,7 +118,7 @@ readGLPLP file = execLPT $ do
 	sequence_ [do
 		bds <- lift $ rowBounds i
 		name <- lift $ getRowName i
-		maybe constrain constrain' name 
+		maybe constrain constrain' name
 			(linCombination [(v, names ! j) | (j, v) <- row]) bds
 			| (i, row) <- rowContents]
 	obj <- lift $ sequence [do
