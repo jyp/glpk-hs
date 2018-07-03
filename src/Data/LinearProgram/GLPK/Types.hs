@@ -2,6 +2,7 @@
 
 module Data.LinearProgram.GLPK.Types where
 
+import Control.Concurrent (runInBoundThread)
 import Control.Exception (bracket)
 import Control.Monad.Trans (MonadIO (..))
 import Control.Monad (ap)
@@ -26,7 +27,7 @@ gaveAnswer = flip elem [Success, IterLimReached, TimeLimReached, SearchTerminate
 newtype GLPK a = GLP {execGLPK :: Ptr GlpProb -> IO a}
 
 runGLPK :: GLPK a -> IO a
-runGLPK m = bracket glpCreateProb glpDelProb (execGLPK m)
+runGLPK m = runInBoundThread $ bracket glpCreateProb glpDelProb (execGLPK m)
 
 instance Monad GLPK where
         {-# INLINE return #-}
