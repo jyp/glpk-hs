@@ -2,6 +2,7 @@
 
 module Data.LinearProgram.GLPK.Types where
 
+import Control.Exception (bracket)
 import Control.Monad.Trans (MonadIO (..))
 import Control.Monad (ap)
 
@@ -9,7 +10,7 @@ import Foreign.Ptr
 import Foreign.ForeignPtr
 
 foreign import ccall unsafe "c_glp_create_prob" glpCreateProb :: IO (Ptr GlpProb)
-foreign import ccall unsafe "&c_glp_delete_prob" glpDelProb :: FunPtr (Ptr GlpProb -> IO ())
+foreign import ccall unsafe "c_glp_delete_prob" glpDelProb :: Ptr GlpProb -> IO ()
 
 data GlpProb
 
@@ -25,8 +26,7 @@ gaveAnswer = flip elem [Success, IterLimReached, TimeLimReached, SearchTerminate
 newtype GLPK a = GLP {execGLPK :: Ptr GlpProb -> IO a}
 
 runGLPK :: GLPK a -> IO a
-runGLPK m = do  lp <- newForeignPtr glpDelProb =<< glpCreateProb
-                withForeignPtr lp (execGLPK m)
+runGLPK m = bracket glpCreateProb glpDelProb (execGLPK m)
 
 instance Monad GLPK where
         {-# INLINE return #-}
