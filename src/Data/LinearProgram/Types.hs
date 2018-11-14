@@ -13,9 +13,12 @@ data VarKind = ContVar | IntVar | BinVar deriving (Eq, Ord, Enum, Show, Read, Ge
 
 -- instance NFData VarKind
 
+instance Semigroup VarKind where
+        (<>) = max
+
 instance Monoid VarKind where
         mempty = ContVar
-        mappend = max
+        mappend = (<>)
 
 data Direction = Min | Max deriving (Eq, Ord, Enum, Show, Read, Generic)
 
@@ -38,35 +41,38 @@ instance NFData c => NFData (Bounds c) where
 -- Bounds form a monoid under intersection.
 instance Ord a => Monoid (Bounds a) where
         mempty = Free
-        Free `mappend` bd = bd
-        bd `mappend` Free = bd
-        Equ a `mappend` Equ b
+        mappend = (<>)
+
+instance Ord a => Semigroup (Bounds a) where
+        Free <> bd = bd
+        bd <> Free = bd
+        Equ a <> Equ b
                 | a == b        = Equ a
-        Equ a `mappend` UBound b
+        Equ a <> UBound b
                 | a <= b        = Equ a
-        Equ a `mappend` LBound b
+        Equ a <> LBound b
                 | a >= b        = Equ a
-        Equ a `mappend` Bound l u
+        Equ a <> Bound l u
                 | a >= l && a <= u
                                 = Equ a
-        Equ _ `mappend` _ = infeasible
-        UBound b `mappend` Equ a
+        Equ _ <> _ = infeasible
+        UBound b <> Equ a
                 | a <= b        = Equ a
-        LBound b `mappend` Equ a
+        LBound b <> Equ a
                 | a >= b        = Equ a
-        Bound l u `mappend` Equ a
+        Bound l u <> Equ a
                 | a >= l && a <= u
                                 = Equ a
-        _ `mappend` Equ _ = infeasible
-        LBound a `mappend` LBound b = LBound (max a b)
-        LBound l `mappend` UBound u = bound l u
-        UBound u `mappend` LBound l = bound l u
-        LBound a `mappend` Bound l u = bound (max a l) u
-        Bound l u `mappend` LBound a = bound (max a l) u
-        UBound a `mappend` UBound b = UBound (min a b)
-        UBound a `mappend` Bound l u = bound l (min a u)
-        Bound l u `mappend` UBound a = bound l (min a u)
-        Bound l u `mappend` Bound l' u' = bound (max l l') (min u u')
+        _ <> Equ _ = infeasible
+        LBound a <> LBound b = LBound (max a b)
+        LBound l <> UBound u = bound l u
+        UBound u <> LBound l = bound l u
+        LBound a <> Bound l u = bound (max a l) u
+        Bound l u <> LBound a = bound (max a l) u
+        UBound a <> UBound b = UBound (min a b)
+        UBound a <> Bound l u = bound l (min a u)
+        Bound l u <> UBound a = bound l (min a u)
+        Bound l u <> Bound l' u' = bound (max l l') (min u u')
 
 infeasible :: Bounds a
 infeasible = error "Mutually contradictory constraints found."
