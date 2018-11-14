@@ -1,0 +1,15 @@
+local-packages:
+  glpk-hs:
+    location: .
+
+source-deps:
+  gasp:
+    location: https://github.com/jyp/gasp.git
+
+non-haskell-deps:
+    - glpk
+
+nixpkgs:
+  # commit: f5eea8ba1d04c4b7f72bdd48f553585052f820f3
+  # sha256: 1i2qz0gjm1y49gbwyn7i2928255a4r4iq6bvxjg09hkmc4if12g0
+  url: https://github.com/NixOS/nixpkgs-channels/archive/nixos-18.09.tar.gz

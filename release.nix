@@ -1,4 +1,5 @@
 let
+  nixpkgs_source = fetchTarball "https://github.com/NixOS/nixpkgs-channels/archive/nixos-18.09.tar.gz"; 
   config = {
     allowUnfree = true;
     packageOverrides = pkgs: rec {
@@ -13,7 +14,7 @@ let
     };
   };
 
-  pkgs = import <nixpkgs> { inherit config; };
+  pkgs = import nixpkgs_source { inherit config; };
 
 in
   { glpk-hs = pkgs.haskellPackages.glpk-hs;
