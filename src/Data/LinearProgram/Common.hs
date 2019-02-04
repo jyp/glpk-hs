@@ -5,15 +5,15 @@ module Data.LinearProgram.Common (
 	module Algebra.Classes,
 	module Data.LinearProgram.Types) where
 
-import Data.LinearProgram.Spec
-import Algebra.Classes
-import Data.LinearProgram.Types
+import           Algebra.Classes
+import           Data.LinearProgram.Spec
+import           Data.LinearProgram.Types
 
-import Data.Map
-import GHC.Exts (build)
+import           Data.Map
+import           GHC.Exts                 (build)
 
 {-# RULES
-	"assocs" assocs = \ m -> build (\ c n -> foldWithKey (curry c) n m);
-	"elems" elems = \ m -> build (\ c n -> foldWithKey (const c) n m);
-	"keys" keys = \ m -> build (\ c n -> foldWithKey (\ k _ -> c k) n m);
+	"assocs" assocs = \ m -> build (\ c n -> foldrWithKey (curry c) n m);
+	"elems" elems = \ m -> build (\ c n -> foldrWithKey (const c) n m);
+	"keys" keys = \ m -> build (\ c n -> foldrWithKey (\ k _ -> c k) n m);
 	#-}
