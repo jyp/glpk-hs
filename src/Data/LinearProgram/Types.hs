@@ -5,6 +5,7 @@ import Control.DeepSeq
 import Data.Monoid
 import GHC.Generics
 import Data.Map
+import Data.Semigroup as SG
 
 type LinFunc = Map
 
@@ -18,7 +19,7 @@ instance Semigroup VarKind where
 
 instance Monoid VarKind where
         mempty = ContVar
-        mappend = (<>)
+        mappend = (SG.<>)
 
 data Direction = Min | Max deriving (Eq, Ord, Enum, Show, Read, Generic)
 
@@ -41,7 +42,7 @@ instance NFData c => NFData (Bounds c) where
 -- Bounds form a monoid under intersection.
 instance Ord a => Monoid (Bounds a) where
         mempty = Free
-        mappend = (<>)
+        mappend = (SG.<>)
 
 instance Ord a => Semigroup (Bounds a) where
         Free <> bd = bd
