@@ -1,4 +1,4 @@
-#include <glpk/glpk.h>
+#include <glpk.h>
 // #include <stdio.h>
 // #include <stdlib.h>
 
