@@ -36,12 +36,12 @@ instance (Ord v,AbelianAdditive c) => AbelianAdditive (LinExpr v c)
 instance (Ord v, Ring c) => Module c (LinExpr v c) where
 	k *^ LinExpr a c = LinExpr (k *^ a) (k * c)
 
-substituteExpr :: (Ord v, Module c c) => v -> LinExpr v c -> LinExpr v c -> LinExpr v c
+substituteExpr :: (Ord v, Ring c) => v -> LinExpr v c -> LinExpr v c -> LinExpr v c
 substituteExpr v expV expr@(LinExpr a c) = case lookup v a of
 	Nothing	-> expr
 	Just k	-> LinExpr (delete v a) c + (k *^ expV)
 
-simplifyExpr :: (Ord v, Module c c) => LinExpr v c -> Map v (LinExpr v c) -> LinExpr v c
+simplifyExpr :: (Ord v, Ring c) => LinExpr v c -> Map v (LinExpr v c) -> LinExpr v c
 simplifyExpr (LinExpr a c) sol =
 	foldrWithKey (const (+)) (LinExpr (difference a sol) c) (intersectionWith (*^) a sol)
 
