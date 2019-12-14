@@ -4,6 +4,7 @@ module Data.LinearProgram.GLPK.Types where
 
 import Control.Concurrent (runInBoundThread)
 import Control.Exception (bracket)
+import qualified Control.Monad.Fail as Fail
 import Control.Monad.Trans (MonadIO (..))
 import Control.Monad (ap)
 
@@ -29,6 +30,8 @@ newtype GLPK a = GLP {execGLPK :: Ptr GlpProb -> IO a}
 runGLPK :: GLPK a -> IO a
 runGLPK m = runInBoundThread $ bracket glpCreateProb glpDelProb (execGLPK m)
 
+instance Fail.MonadFail GLPK where
+    fail s = GLP $ \_ -> Fail.fail s
 instance Monad GLPK where
         {-# INLINE return #-}
         {-# INLINE (>>=) #-}

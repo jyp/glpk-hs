@@ -27,7 +27,7 @@ source-repository head
 executable glpk-hs-example
   main-is:          examples/example1.hs
   build-depends:    base >= 4 && < 5, array, containers, mtl, deepseq, gasp, glpk-hs
-  ghc-options:      -O2 -Wall
+  ghc-options:      -O2 -Wall -threaded
   default-language: Haskell2010
 
 library
