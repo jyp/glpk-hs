@@ -4,6 +4,7 @@ module Data.LinearProgram.GLPK.Types where
 
 import Control.Concurrent (runInBoundThread)
 import Control.Exception (bracket)
+import qualified Control.Monad.Fail as Fail
 import Control.Monad.Trans (MonadIO (..))
 import Control.Monad (ap)
 
@@ -35,6 +36,8 @@ instance Monad GLPK where
         return x = GLP $ \ _ -> return x
         m >>= k = GLP $ \ lp -> do      x <- execGLPK m lp
                                         execGLPK (k x) lp
+instance Fail.MonadFail GLPK where
+        fail s = GLP . const $ Fail.fail s
 instance Functor GLPK where
   fmap f (GLP k) = GLP $ \p -> fmap f (k p)
 
