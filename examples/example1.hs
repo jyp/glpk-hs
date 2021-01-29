@@ -17,7 +17,7 @@ lp :: LP String Int
 lp = execLPM $ do
   setDirection Max
   setObjective objFun
-  leqTo (add $ map (1 *&) ["x1", "x2", "x3"]) 100
+  leqTo (Data.LinearProgram.sum $ map (1 *&) ["x1", "x2", "x3"]) 100
   leqTo (10 *& "x1" + 4 *& "x2" + 5 *& "x3") 600
   leqTo (linCombination [(2, "x1"), (2, "x2"), (6, "x3")]) 300
   varGeq "x1" 0

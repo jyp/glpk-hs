@@ -5,6 +5,7 @@ import Control.Monad
 
 import Data.LinearProgram.Types
 import Algebra.Classes
+import Algebra.Linear
 import Data.Functor
 import Data.Foldable
 
