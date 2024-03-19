@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 module Data.LinearProgram.GLPK.IO.Internal (readGLPLP, writeGLPLP) where
-import Prelude hiding ((+))
+import Prelude hiding ((+), subtract)
 import Control.Monad
 import Control.Monad.Trans (liftIO, lift)
 

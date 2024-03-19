@@ -8,6 +8,8 @@ import Control.Monad.State.Strict
 import Control.Monad.RWS.Class
 import Control.Monad.Cont.Class
 import Control.Monad.Error.Class
+import Control.Monad.Fix
+import Control.Monad
 import Control.Applicative
 import Control.Monad.LPMonad.Supply.Class
 
