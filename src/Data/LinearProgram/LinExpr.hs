@@ -24,17 +24,17 @@ funcToExpr = flip LinExpr zero
 
 data LinExpr v c = LinExpr (LinFunc v c) c deriving (Eq, Read, Show)
 
-instance (Ord v, Additive c) => Additive (LinExpr v c) where
+instance (Ord v, AbelianAdditive c, Additive c) => Additive (LinExpr v c) where
 	zero = LinExpr zero zero
 	LinExpr a1 c1 + LinExpr a2 c2 = LinExpr (a1 + a2) (c1 + c2)
 
-instance (Ord v, Group c) => Group (LinExpr v c) where
+instance (Ord v, Group c, AbelianAdditive c) => Group (LinExpr v c) where
 	LinExpr a1 c1 - LinExpr a2 c2 = LinExpr (a1 - a2) (c1 - c2)
 	negate (LinExpr a c) = LinExpr (negate a) (negate c)
 
 instance (Ord v,AbelianAdditive c) => AbelianAdditive (LinExpr v c)
 
-instance (Ord v, Ring c) => Module c (LinExpr v c) where
+instance (Ord v, Ring c) => Scalable c (LinExpr v c) where
 	k *^ LinExpr a c = LinExpr (k *^ a) (k * c)
 
 substituteExpr :: (Ord v, Ring c) => v -> LinExpr v c -> LinExpr v c -> LinExpr v c
